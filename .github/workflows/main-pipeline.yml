@@ -1,0 +1,62 @@
+name: Main Branch Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  # ─────────────────────────────────────────────
+  # Job 1: Build and Test
+  # ─────────────────────────────────────────────
+  build-test:
+    name: Build & Test
+    uses: ./.github/workflows/reusable-build-test.yml
+    with:
+      node_version: '20'
+      run_tests: true
+
+  # ─────────────────────────────────────────────
+  # Job 2: Generate Short SHA
+  # ─────────────────────────────────────────────
+  generate-sha:
+    name: Generate Short SHA
+    runs-on: ubuntu-latest
+    outputs:
+      short_sha: ${{ steps.vars.outputs.short_sha }}
+
+    steps:
+      - name: Create short commit SHA
+        id: vars
+        run: |
+          echo "short_sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+
+  # ─────────────────────────────────────────────
+  # Job 3: Docker Build & Push (SHA tag)
+  # ─────────────────────────────────────────────
+  docker-build:
+    name: Docker Build & Push
+    needs: [build-test, generate-sha]
+    uses: ./.github/workflows/reusable-docker.yml
+    with:
+      image_name: github-actions-capstone
+      tag: sha-${{ needs.generate-sha.outputs.short_sha }}
+    secrets:
+      docker_username: ${{ vars.DOCKER_USERNAME }}
+      docker_token: ${{ secrets.DOCKER_TOKEN }}
+
+  # ─────────────────────────────────────────────
+  # Job 4: Deploy to Production
+  # ─────────────────────────────────────────────
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: docker-build
+    environment: production
+
+    steps:
+      - name: Deploy image
+        run: |
+          echo "Deploying image: ${{ needs.docker-build.outputs.image_url }} to production"
+
+
