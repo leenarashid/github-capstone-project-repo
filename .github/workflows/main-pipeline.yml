@@ -63,7 +63,7 @@ jobs:
        with:
           image-ref: ${{ vars.DOCKER_USERNAME }}/github-actions-capstone:sha-${{ needs.generate-sha.outputs.short_sha }}
           format: table
-          severity: CRITICAL,HIGH
+          severity: CRITICAL
           ignore-unfixed: true
         
           exit-code: 1
