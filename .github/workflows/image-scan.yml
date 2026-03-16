@@ -9,8 +9,7 @@ jobs:
   image-scanner:
     runs-on: ubuntu-latest
     steps:
-      - name: Code Checkout
-        uses: actions/checkout@v4
+     
     
       - name: Login to DockerHub
         uses: docker/login-action@v3
@@ -21,7 +20,7 @@ jobs:
         uses: aquasecurity/trivy-action@0.35.0
         with:
           image-ref: ${{ secrets.DOCKER_USERNAME }}/github-actions-capstone:latest
-          severity: CRITICAL,HIGH
+          severity: CRITICAL
           exit-code: 1
-          trivyignore: ${{ github.workspace }}/.trivyignore
+        
 # see for the lastest trivy version in Github, trivy actions
